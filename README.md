@@ -2,75 +2,198 @@ FPS Box Destruction Game – JSON-Driven Dynamic Spawning (UE5 C++)
 
 
 🎯 Overview
-This is a First-Person Shooter (FPS) project built entirely in Unreal Engine C++ (no plugins or external libraries). The game dynamically spawns damageable colored boxes using JSON data fetched from a remote URL, 
+This is a First-Person Shooter (FPS) project built entirely in Unreal Engine C++. The game dynamically spawns damageable colored boxes using JSON data fetched from a remote URL, 
 and integrates complete combat, damage, UI, and score systems using clean, modular architecture.
 
 |
 
 ✅ Key Features
-🔗 A) Online JSON Data Fetching (Native HTTP & JSON API)
-
-Fetches structured box data from:
+🔗 A) Online JSON Data Fetching
+Fetches box data from:
 https://raw.githubusercontent.com/CyrusCHAU/Varadise-Technical-Test/refs/heads/main/data.json
+
+Uses only native Unreal C++ (FHttpModule, FJsonModule).
 
 |
 
 📦 B) Dynamic Box Spawning
+Boxes are spawned every 3 seconds after fetching JSON data.
 
-Boxes are spawned every 3 seconds based on JSON data.
-Box behavior and properties (color, health, score value) are controlled entirely from fetched data.
+Uses a simple UE box mesh and dynamically changes its color.
 
-|
-
-🎨 C) Custom Material Support
-
-A single material instance with a color parameter is used.
-Each box sets its material color at runtime via C++ to match its JSON-defined color value.
+Properties (health, score, color) are driven by data.
 
 |
 
-🔫 D) Bullet and Shooting System
+🎨 C) Custom Material & Color Logic
+Custom material instance uses a parameterized color vector.
 
-FPS_Character handles:
+Box color is set in C++ at runtime using UMaterialInstanceDynamic.
 
-Movement
+|
 
-Gun equip
+🔫 D) Bullet and Shooting Mechanics
+Player shoots bullets via the gun actor.
 
-Shooting input
+Bullets are aimed toward the center of the screen using a trace.
 
-Gun class: Spawns bullets aimed at the center of the screen.
+Bullet hits:
 
-Bullet class: Detects hits via line trace or projectile logic
+Reduce the box’s health by 1
 
-Deals 1 point of damage per hit
+Destroy the box if health reaches 0
 
-Destroys boxes when health reaches zero
-
-Triggers score update for the player
+Award score to the shooter
 
 |
 
 🧱 E) Damageable Boxes
+Each box stores and updates:
 
-FloatingBox class:
+Health
 
-Receives all data from the JSON structure
+Color
 
-Handles color material assignment
+Score value
 
-Tracks its health and calls destruction logic
+Boxes are destroyed when health reaches zero.
 
-Health and destruction fully driven from code-side logic
+Score is transferred to the bullet owner (the player).
 
 |
 
-🖥️ F) UI & Score Tracking (UMG + C++)
+🖥️ F) Score & Health UI (UMG + C++)
+Two UUserWidget-derived C++ widgets:
 
-Two C++-based widgets:
+Score Widget for the player's score
 
-Score Widget (attached to player) updates in real time
+Health Widget shown above each box
 
-Box Health Widget (attached to each box) displays current health
+Blueprint can be used to arrange layout, but logic is in C++.
 
-UMG used only for layout — logic is entirely in C++
+Widgets are updated in real-time using native Unreal API.
+
+|
+
+🧱 Core Classes
+🎮 AFPS_GameModeBase
+Controls JSON data fetching and spawning logic.
+
+Retrieves data using FHttpModule.
+
+Parses JSON using TSharedPtr<FJsonObject>.
+
+Spawns boxes dynamically every 3 seconds.
+
+Passes parsed data to each spawned AFloatingBox.
+
+|
+
+✅ Demonstrates:
+
+HTTP + JSON logic in native C++
+
+Runtime spawning
+
+Clean separation of game management logic
+
+|
+
+🔫 AGun
+Spawns bullets and handles targeting logic.
+
+Fires bullets with input from the player.
+
+Targets center of the screen using GetPlayerController() and viewport size.
+
+Sets bullet owner for score handling.
+
+✅ Demonstrates:
+
+Modular gun system
+
+Aiming with screen center targeting
+
+Ownership management
+
+|
+
+💥 ABullet
+Applies damage and awards score.
+
+Detects hits via OnHit or line trace.
+
+Applies 1 damage to boxes.
+
+Destroys itself on impact.
+
+Awards score to the owning character.
+
+|
+
+✅ Demonstrates:
+
+Collision handling
+
+Actor communication via casting and interfaces
+
+Score transfer logic
+
+|
+
+🧍 AFPS_Character
+Handles movement, aiming, and scoring.
+
+Controls player input and movement.
+
+Equips gun on spawn.
+
+Tracks and updates player's score.
+
+Interfaces with UScoreWidget to update UI.
+
+✅ Demonstrates:
+
+FPS mechanics in C++
+
+Score UI integration
+
+Weapon ownership system
+
+|
+
+🧊 AFloatingBox
+The box actor driven by JSON data.
+
+Accepts and stores JSON values (color, health, score).
+
+Applies material color via dynamic material instance.
+
+Updates UI widget for current health.
+
+Destroys itself on zero health.
+
+✅ Demonstrates:
+
+Dynamic material usage
+
+Runtime data injection
+
+Actor destruction and UI communication
+
+|
+
+🖼️ UScoreWidget & UBoxHealthWidget
+Real-time HUD updates
+
+UScoreWidget: Displays the current score of the player.
+
+UBoxHealthWidget: Floats above boxes showing current health.
+
+Created in C++, designed in Blueprint.
+
+✅ Demonstrates:
+
+UMG-C++ hybrid development
+
+Data binding and runtime updates+
